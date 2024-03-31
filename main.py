@@ -1,1 +1,1 @@
-import NeuroFlow
+from NeuroFlow.server import app
