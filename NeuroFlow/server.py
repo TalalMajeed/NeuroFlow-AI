@@ -5,9 +5,19 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+from NeuroFlow.database import conn
+
 @app.route('/')
 def home():
     return "<h1>NeuroFlow API</h1><p>This site is a prototype API for NeuroFlow.</p>"
+
+@app.route('/checkdb')
+def checkdb():
+    if conn is not None:
+        return jsonify({"status": 200, "message": "Connected to database"})
+    else:
+        return jsonify({"status": 500, "message": "Error connecting to database"})
+
 
 @app.errorhandler(404)
 def page_not_found(e):
