@@ -18,6 +18,10 @@ def checkdb():
     else:
         return jsonify({"status": 500, "message": "Error connecting to database"})
 
+@app.route('/test')
+def test():
+    return jsonify({"status": 200, "message": "Success"})
+
 
 @app.errorhandler(404)
 def page_not_found(e):
