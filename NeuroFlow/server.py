@@ -5,7 +5,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-from NeuroFlow.database import conn
+from NeuroFlow.database import *
 
 @app.route('/')
 def home():
@@ -21,6 +21,10 @@ def checkdb():
 @app.route('/test')
 def test():
     return jsonify({"status": 200, "message": "Success"})
+
+@app.route('/users')
+def users():
+    return jsonify(getUsers())
 
 
 @app.errorhandler(404)
