@@ -1,0 +1,17 @@
+CREATE TABLE "users" (
+    "userID" VARCHAR(5) PRIMARY KEY,
+    "name" VARCHAR(45),
+    "gender" VARCHAR(6),
+    "email" VARCHAR(45),
+    "password" VARCHAR(45),
+    "description" VARCHAR(100)
+);
+
+CREATE TABLE "diagrams" (
+    "diagramID" VARCHAR(5) PRIMARY KEY,
+    "userID" VARCHAR(5),
+    "name" VARCHAR(45),
+    "description" VARCHAR(100),
+    "data" BYTEA,
+    FOREIGN KEY ("userID") REFERENCES "users"("userID")
+);
