@@ -5,6 +5,7 @@ import datetime
 from flask import request
 import string
 import random
+import psycopg2
 
 from NeuroFlow.database import *
 
@@ -23,7 +24,6 @@ def RequiredToken(f):
                     return json.dumps({"status":498,"message":"Invalid Token"})
                 return f(*args, **kwargs)
             except Exception as e:
-                print("ErroADAWDWADr")
                 print(e)
                 return json.dumps({"status":498,"message":"Invalid Token"})
         else:

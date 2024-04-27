@@ -1,5 +1,4 @@
-#Create a Standard Flask Server
-from flask import Flask, request, jsonify
+from flask import Flask, request, redirect, url_for, render_template, send_from_directory, jsonify
 from flask_cors import CORS
 import jwt
 import datetime
@@ -13,6 +12,19 @@ from NeuroFlow.database import *
 from NeuroFlow.validation import *
 
 @app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/<path:path>')
+def send_static(path):
+    print("Requested path:", path)
+    links = ["","login","panel","welcome"]
+    if path in links:
+        return render_template('index.html')
+    else:
+        return send_from_directory('static', path)
+
+@app.route('/api')
 def home():
     return "<h1>NeuroFlow API</h1><p>This site is a prototype API for NeuroFlow.</p>"
 
@@ -23,7 +35,7 @@ def checkdb():
     else:
         return jsonify({"status": 500, "message": "Error connecting to database"})
 
-@app.route('/login', methods=['POST'])
+@app.route('/loginUser', methods=['POST'])
 def login():
     data = request.get_json()
     email = data['email']
@@ -53,6 +65,17 @@ def checkauth():
 def renew():
     token = jwt.encode({'uid': request.get_json()['uid'], 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, 'secret', algorithm='HS256')
     return jsonify({"status": 200, "message": "Renew successful", "data": json.dumps({"uid": request.get_json()['uid'], "token": token})})
+
+@app.route('/updateUser', methods=['POST'])
+@RequiredToken
+def update():
+    data = request.get_json()
+
+    x = updateUser(data['uid'], data['name'], data['description'], data['gender'], data['occupation'], data['image'])
+
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": "User updated"})
 @app.errorhandler(404)
 def page_not_found(e):
     return jsonify({"status": 404, "message": "Not Found"}), 404
