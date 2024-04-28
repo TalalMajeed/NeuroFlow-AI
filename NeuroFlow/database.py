@@ -3,6 +3,8 @@ import psycopg2
 import os
 import json
 import base64
+import string
+import random
 
 try:
     conn = psycopg2.connect(
@@ -14,6 +16,13 @@ try:
 except Exception as e:
     print(f"Error connecting to database: {e}")
     conn = None
+
+
+def codeGenerate():
+    letters = string.ascii_lowercase
+    numbers = string.digits
+    code = ''.join(random.choice(letters) for i in range(2)) + ''.join(random.choice(numbers) for i in range(3))
+    return code.upper()
 
 def Query(f):
     def wrapper(*args, **kwargs):
@@ -108,6 +117,7 @@ def checkIDSQL(id):
         cur.close()
 
         user_list = []
+        user_dict = None
         for row in rows:
             user_dict = row[0]
 
@@ -129,6 +139,65 @@ def updateUser(userID,name,description,gender,occupation,image):
         else:
             image = None
         cur.execute("UPDATE users SET name = %s, description = %s, gender = %s, occupation = %s, image = %s WHERE userID = %s", (name, description, gender, occupation, image, userID))
+        conn.commit()
+        cur.close()
+
+        return 1
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def createSQLUser(email, password, name, gender, occupation):
+    global conn
+    try:
+        print(email, password,name,gender,occupation)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+        rows = cur.fetchall()
+        cur.close()
+
+        user_dict = []
+        for row in rows:
+            user_dict = row[0]
+
+        if user_dict:
+            return -2
+
+        cur = conn.cursor()
+        cur.execute("SELECT userID FROM users")
+        rows = cur.fetchall()
+        cur.close()
+
+        user_list = []
+        for row in rows:
+            user_dict = row[0]
+            user_list.append(user_dict)
+
+        userID = ""
+        while True:
+            userID = codeGenerate()
+            if userID not in user_list:
+                break
+
+        cur = conn.cursor()
+        cur.execute("INSERT INTO users (userID, email, password, gender, name, occupation) VALUES (%s, %s, %s, %s, %s, %s)", (userID, email, password, gender, name, occupation))
+
+        conn.commit()
+        cur.close()
+
+        return userID
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def deleteSQLUser(id):
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM users WHERE userID = %s", (id,))
         conn.commit()
         cur.close()
 

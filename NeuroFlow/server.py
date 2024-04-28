@@ -18,7 +18,7 @@ def index():
 @app.route('/<path:path>')
 def send_static(path):
     print("Requested path:", path)
-    links = ["","login","panel","welcome"]
+    links = ["","login","panel","welcome","register"]
     if path in links:
         return render_template('index.html')
     else:
@@ -52,6 +52,27 @@ def login():
 
     return jsonify({"status": 500, "message": "Internal Server Error"})
 
+@app.route('/createUser', methods=['POST'])
+def create():
+    data = request.get_json()
+    email = data['email']
+    password = data['password']
+    name = data['name']
+    gender = data['gender']
+    occupation = data['occupation']
+
+    x = createSQLUser(email, password, name, gender, occupation)
+
+    if x == -1:
+        return jsonify({"status": 401, "message": "Registration failed"})
+    elif x == -2:
+        return jsonify({"status": 409, "message": "Email already registered"})
+    else:
+        token = jwt.encode({'uid': x, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, 'secret', algorithm='HS256')
+        return jsonify({"status": 200, "message": "Registration successful", "data": json.dumps({"uid": x, "token": token})})
+
+    return jsonify({"status": 500, "message": "Internal Server Error"})
+
 @app.route('/checkauth', methods=['POST'])
 @RequiredToken
 def checkauth():
@@ -76,6 +97,16 @@ def update():
     if x == -1:
         return jsonify({"status": 500, "message": "Internal Server Error"})
     return jsonify({"status": 200, "message": "User updated"})
+
+@app.route('/deleteUser', methods=['POST'])
+@RequiredToken
+def delete():
+    x = deleteSQLUser(request.get_json()['uid'])
+
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": "User deleted"})
+    
 @app.errorhandler(404)
 def page_not_found(e):
     return jsonify({"status": 404, "message": "Not Found"}), 404

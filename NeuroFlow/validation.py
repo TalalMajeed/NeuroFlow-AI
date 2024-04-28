@@ -30,9 +30,3 @@ def RequiredToken(f):
             return json.dumps({"status":101,"message":"Token Required"})
     wrapper.__name__ = f.__name__
     return wrapper
-
-def codeGenerate():
-    letters = string.ascii_lowercase
-    numbers = string.digits
-    code = ''.join(random.choice(letters) for i in range(2)) + ''.join(random.choice(numbers) for i in range(3))
-    return code.upper()
