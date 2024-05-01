@@ -6,16 +6,20 @@ import base64
 import string
 import random
 
-try:
-    conn = psycopg2.connect(
-        host=os.getenv("POSTGRES_HOST"),
-        database='verceldb',
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD")
-    )
-except Exception as e:
-    print(f"Error connecting to database: {e}")
-    conn = None
+conn = None
+
+def connectSQL():
+    global conn
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv("POSTGRES_HOST"),
+            database='verceldb',
+            user=os.getenv("POSTGRES_USER"),
+            password=os.getenv("POSTGRES_PASSWORD")
+        )
+    except Exception as e:
+        print(f"Error connecting to database: {e}")
+        conn = None
 
 
 def codeGenerate():
@@ -29,12 +33,7 @@ def Query(f):
         global conn
         try:
             if conn == None or conn.closed != 0:
-                conn = psycopg2.connect(
-                    host=os.getenv("POSTGRES_HOST"),
-                    database='verceldb',
-                    user=os.getenv("POSTGRES_USER"),
-                    password=os.getenv("POSTGRES_PASSWORD")
-                )
+                connectSQL()
         except Exception as e:
             print(f"Error connecting to database: {e}")
             conn = None
@@ -198,6 +197,74 @@ def deleteSQLUser(id):
     try:
         cur = conn.cursor()
         cur.execute("DELETE FROM users WHERE userID = %s", (id,))
+        conn.commit()
+        cur.close()
+
+        return 1
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def getSQLName(id):
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM users WHERE userID = %s", (id,))
+        rows = cur.fetchall()
+        cur.close()
+
+        for row in rows:
+            user_dict = row[0]
+    
+        return user_dict
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def getSQLEmail(id):
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT email FROM users WHERE userID = %s", (id,))
+        rows = cur.fetchall()
+        cur.close()
+
+        for row in rows:
+            user_dict = row[0]
+    
+        return user_dict
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def resetSQLPassword(id, password):
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("UPDATE users SET password = %s WHERE userID = %s", (password, id))
+        conn.commit()
+        cur.close()
+
+        return 1
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def saveSQLInfo(id, description, image):
+    global conn
+    try:
+        cur = conn.cursor()
+        if image:
+            image = bytes(image.split(",")[1], "utf-8")
+        else:
+            image = None
+        cur.execute("UPDATE users SET description = %s, image = %s WHERE userID = %s", (description, image, id))
         conn.commit()
         cur.close()
 

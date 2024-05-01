@@ -3,6 +3,7 @@ from flask_cors import CORS
 import jwt
 import datetime
 import json
+import ast
 
 
 app = Flask(__name__)
@@ -10,6 +11,10 @@ CORS(app)
 
 from NeuroFlow.database import *
 from NeuroFlow.validation import *
+from NeuroFlow.generator import *
+from NeuroFlow.placement import *
+
+waitingData = []
 
 @app.route('/')
 def index():
@@ -18,7 +23,7 @@ def index():
 @app.route('/<path:path>')
 def send_static(path):
     print("Requested path:", path)
-    links = ["","login","panel","welcome","register"]
+    links = ["","login","panel","welcome","register","forgot","info"]
     if path in links:
         return render_template('index.html')
     else:
@@ -106,6 +111,101 @@ def delete():
     if x == -1:
         return jsonify({"status": 500, "message": "Internal Server Error"})
     return jsonify({"status": 200, "message": "User deleted"})
+
+@app.route('/info', methods=['POST'])
+@RequiredToken
+def info():
+    x = getSQLName(request.get_json()['uid'])
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": x})
+
+@app.route('/email', methods=['POST'])
+@RequiredToken
+def email():
+    x = getSQLEmail(request.get_json()['uid'])
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": x})
+
+@app.route('/saveinfo', methods=['POST'])
+@RequiredToken
+def saveInfo():
+    data = request.get_json()
+    x = saveSQLInfo(data['uid'], data['description'],data['image'])
+
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": "Info saved"})
+
+@app.route('/reset', methods=['POST'])
+@RequiredToken
+def reset():
+    data = request.get_json()
+    x = resetSQLPassword(data['uid'], data['password'])
+
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": "Password reset"})
+
+@app.route('/generate', methods=['POST'])
+@RequiredToken
+def generate():
+    print("Generating")
+    data = request.get_json()
+    
+    generateID = codeGenerate()
+    while generateID in waitingData:
+        generateID = codeGenerate()
+
+    try:
+        x = str(getResponse(data['description'], data['languages'],data['context']))
+        print(x)
+        y = ast.literal_eval(x)
+        boxes_info = list(y['boxesInformation'].values())
+        connections_info = y['connectionsInformation']
+
+        waitingData.append([generateID, x])
+        return jsonify({"status": 200, "message": "Response generated", "data": [boxes_info, connections_info], "id": generateID})
+    except Exception as e:
+        print(e)
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+
+@app.route('/complete', methods=['POST'])
+@RequiredToken
+def complete():
+    print("Completing")
+    data = request.get_json()
+    current = None
+
+    for i in waitingData:
+        if i[0] == data['id']:
+            current = i[1]
+            waitingData.remove(i)
+            break
+
+    if current == None:
+        return jsonify({"status": 404, "message": "Not Found"})
+
+
+    did = data['id']
+    dim = data['dim']
+
+    print("DIM",dim)
+
+
+    for i in range(len(dim)):
+        dim[i] = ["B" + str(i+1), dim[i][0], dim[i][1]]
+
+    data = ast.literal_eval(current)
+    connections_info = data['connectionsInformation']
+
+    print("CONNECTIONS_INFO",connections_info)
+
+    placement = generatePlacement(dim, connections_info)
+
+    return jsonify({"status": 200, "message": "Response completed", "data": placement, "id": did})
+
     
 @app.errorhandler(404)
 def page_not_found(e):
