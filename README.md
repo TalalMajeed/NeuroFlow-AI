@@ -54,7 +54,7 @@ To run this project, you will need to add the following environment variables to
 
 ## Screenshots
 
-![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+![App Screenshot](https://github.com/TalalMajeed/NeuroFlow-AI/blob/master/NeuroFlow/static/assets/Workflow_example.jpeg)
 
 ## Demo
 
