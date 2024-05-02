@@ -5,8 +5,6 @@ An efficient 21st-century tool that helps its clients design comprehensive and o
 <img src=https://github.com/TalalMajeed/NeuroFlow-AI/blob/master/NeuroFlow/static/assets/logo-BNZQ-ew0.png alt=Logo height=200 width=200 />
 
 
-
-
 ## Features
 
 - Computer Based Web Application
@@ -15,6 +13,11 @@ An efficient 21st-century tool that helps its clients design comprehensive and o
 - Diagram & Workflow Storage
 - User Account Management
 - Colorful Flowchart Generation
+
+
+## Deployment Site
+
+[NeuroFlow](https://neuro-flow-ai.vercel.app/welcome)
 
 
 ## Installation
@@ -47,15 +50,6 @@ To run this project, you will need to add the following environment variables to
 `POSTGRES_USER`  Database User
   
 `POSTGRES_PASSWORD`  Database Password
-
-
-## Deployment
-
-To deploy this project run
-
-```bash
-  npm run deploy
-```
 
 
 ## Screenshots
