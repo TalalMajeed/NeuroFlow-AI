@@ -62,7 +62,7 @@ Initialize Application database in server using **Schema.txt** given
 
 ## Demo
 
-Insert gif or link to demo
+App Demo: [Click here](https://github.com/TalalMajeed/NeuroFlow-AI/blob/master/NeuroFlow-Demo.mp4) to see the video
 
 ## Example for Testing
 
