@@ -313,7 +313,7 @@ def getSystemPrompt():
     -> The response will be sent to the Front-End in the form of a JSON Object, so consistency, reliability, and accuracy of your generated responses based on the given formats is CRITICAL.
     -> The USER wants a DETAILED BREAKDOWN on how to solve the given problem. Breakdown every step into as many sub-steps as possible and make seperate boxes for each substep. EXPLICITLY state how to implement each of the step while also mentioning the relevant technologies.
     -> Also make sure to include one to many relations (in which one box is connected to many other boxes), many to one (in which many boxes are connected to one box), and the relations in which both boxes have connections towards each other in the workflow and give them in the form of the given format, always AVOID a linear workflow. 
-    -> You must make sure that the total number of boxes, that is, B1, B2, B3, and so on SHOULD NOT be less than 25 in any case, you are HIGHLY encouraged to increase the number of boxes in order to provide the maximum information.
+    -> You must make sure that the total number of boxes, that is, B1, B2, B3, and so on SHOULD BE AT MOST 18 in any case, you are HIGHLY encouraged to increase the number of boxes in order to provide the maximum information, but the number of bxoes should not be above 18.
 '''
     return prompt
     
