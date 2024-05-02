@@ -53,19 +53,20 @@ def getGPTFunctions():
                     "properties": {
                         "boxesInformation": {
                             "description": """
-                                The value of the key boxesInformation will be a DICTIONARY that has a number of keys, with each key showing the BOX NUMBER of the step of the algorithm (like B1,B2 etc), and the VALUE TO EACH KEY HAVING A LIST, that I will call "dictList" from now on,the that has two enteries, the first entry of "dictList" shows the heading, and the second entry of "dictList" showing the TECHNOLOGIES USED AT EACH STEP.
-                                -> Sample response is as follows : 
+                                The value of the key boxesInformation will be a DICTIONARY that has a number of keys, with each key showing the BOX NUMBER of the step of the algorithm (like B1,B2 etc), and the VALUE TO EACH KEY HAVING A LIST, that I will call "dictList" from now on,the that has two enteries, the first entry of "dictList" shows the heading, and the second entry of "dictList" showing the TECHNOLOGIES USED AT EACH STEP, the third entry of "dictList" shows the category of the box, it can be either of "setup","important","testing".
+                                -> Sample response is as follows: 
                                 '''
                                     { 
-                                        "B1": ["Define project requirements and goals", ["Project Management Tools"]],
-                                        "B2": ["Choose a suitable programming language and framework", ["Node.js", "React.js", "Socket.IO"]],
-                                        "B3": ["Set up development environment", ["IDEs (e.g., Visual Studio Code)", "Version Control (e.g., Git)"]],
-                                        "B4": ["Design database schema", ["NoSQL Database (e.g., MongoDB)"]],
-                                        "B5": ["Implement user authentication", ["Authentication Libraries (e.g., Passport.js)"]],
-                                        "B6": ["Develop backend API endpoints for user registration and authentication", ["Node.js", "Express.js"]],
-                                        "B7": ["Implement real-time messaging functionality", ["Socket.IO"]],
-                                        "B8": ["Design frontend user interface", ["React.js", "CSS Frameworks (e.g., Bootstrap)"]],
-                                        "B9": ["Implement messaging UI components", ["React.js"]]
+                                        "B1": ["Define project requirements and goals", ["Project Management Tools"],"setup"],
+                                        "B2": ["Choose a suitable programming language and framework", ["Node.js", "React.js", "Socket.IO"],"setup"],
+                                        "B3": ["Set up development environment", ["IDEs (e.g., Visual Studio Code)", "Version Control (e.g., Git)"],"setup"],
+                                        "B4": ["Design database schema", ["NoSQL Database (e.g., MongoDB)"],"setup"],
+                                        "B5": ["Implement user authentication", ["Authentication Libraries (e.g., Passport.js)"],"important"],
+                                        "B6": ["Develop backend API endpoints for user registration and authentication", ["Node.js", "Express.js"],"important"],
+                                        "B7": ["Implement real-time messaging functionality", ["Socket.IO"],"important"],
+                                        "B8": ["Design frontend user interface", ["React.js", "CSS Frameworks (e.g., Bootstrap)"],"important"],
+                                        "B9": ["Implement messaging UI components", ["React.js"],"important"],
+                                        "B10": ["Launch Website and monitor performance",["Performance Tracking Tools"],"testing"]
                                     }
                                 '''
                             """
@@ -77,7 +78,7 @@ def getGPTFunctions():
                             -> Examples of Many to One Relations : ["B3","B1"],["B2","B1"],["B4","B1"], NOTE that here all the arrows are pointed towards "B1".
                             -> Examples of One to Many Relations : ["B9","B10"],["B9","B11"],["B9","B12"],["B9","B13"], NOTE that here all the arrows start from "B9".
                             -> Examples of reverse connections are : ["B6","B7"],["B7","B6"] if "B6" is connected to "B7" then "B7" is connected to "B6".
-                            -> Sample response is as follows :
+                            -> Sample response is as follows, this response has one to many, many to one, and reverse connections:
                             '''
                                 [
                                         ["B1", "B2"],
@@ -87,7 +88,7 @@ def getGPTFunctions():
                                         ["B4","B1"]
                                 ]
                             '''
-                            -> The example of a linear flowchart is:
+                            -> The example of a linear flowchart is, this response has only one to one connections:
                             '''
                                 [
                                         ["B1","B2"],
@@ -109,7 +110,7 @@ def getGPTFunctions():
 # This is a function whose implementation can be changed based on the type of response coming from the frontend of the application
 def getUserPrompt(description,languages,context):
     prompt =  f"""
-    {description}. I want to use {languages}. {context}. Give me the relevant steps in an as detailed manner as possible. Give as many steps as you possibly can and do not leave anything vague. Explicitly give me the relevant technologies to be used at each step. Please do not give a linear workflow.
+    {description}. I want to use {languages}. {context}. Give me the relevant steps in an as detailed manner as possible. Give as many steps as you possibly can and do not leave anything vague. Explicitly give me the relevant technologies to be used at each step. Never give a linear workflow.
     """
     return prompt
 
@@ -126,20 +127,26 @@ def formatGPTResponse():
         # We will iterate over the boxesInformation and access make a new, formatted value for the boxesInformation and connectionsInformation
         for box in boxesInformation:
             # If the current box is not of length 2 or even if it is of length 2 but the second element is not of type list:
-            if (len(boxesInformation[box]) != 2 or not isinstance(boxesInformation[box][1],list)):
+            if (len(boxesInformation[box]) != 3 or not isinstance(boxesInformation[box][1],list)):
                 # This will be a list, with two elements, first element shows the steps about the box and the second one shows the list of technologies:
                 formattedBoxInfo = []
 
                 # The first element, that is the box name, shows the information steps about the box
                 formattedBoxInfo.append(boxesInformation[box][0])
 
-                # The second element will consist of all the technologies that will be used in the given step
-                formattedBoxInfo.append(boxesInformation[box][1:])
+                # The second element will consist of all the technologies that will be used in the given step, but not including the last one, beause the last one will be the category
+                formattedBoxInfo.append(boxesInformation[box][1:-1])
+
+                # If the last value of the boxesInformation is not in either of the already declared values we will give none here
+                if (boxesInformation[box][-1] not in ["setup","important","testing"]):
+                    formattedBoxInfo.append("undefined")
+                else:
+                    formattedBoxInfo.append(boxesInformation[box][-1])
 
                 # We will append this output to the formattedBoxesResponse variable
                 formmttedBoxesResponse[box] = formattedBoxInfo
 
-            # We will append the response as it is if it is in the correct format, that means that it has length 2 and the second entry is of the type list 
+            # We will append the response as it is if it is in the correct format, that means that it has length 3 and the second entry is of the type list 
             else:
                 formmttedBoxesResponse[box] = boxesInformation[box]
         # Now that we are done, we will give the boxesInformation the value of the formattedBoxesResponse
@@ -204,7 +211,7 @@ def checkGPTResponse():
             
         for box in boxesInformation:
             # The length of each of the box should be equal to 2 (as specified in the response format)
-            if (len(boxesInformation[box]) != 2):
+            if (len(boxesInformation[box]) != 3):
                 # This will be a new function that will need to be implemented, here it is quite possible that the output is correct but just needs some reformatting
                 isFormatted = formatGPTResponse()
 
@@ -299,6 +306,10 @@ def getSystemPrompt():
     -> You are chatting with a user who wants to build a workflow to solve a particular problem. When he prompts to get the workflow of a particular problem he expects a flowchart with arrows connecting the boxes.
     -> Your response to a prompt by the user will be sent as an JSON Object to the Front-End of an application.
     -> The frontend of the application EXPECTS TO get the information about the boxes as well as the information about the arrows connecting the boxes from the response generated here.
+    -> Boxes are classified into either of the three categories "setup","important","testing".
+    -> Example of boxes labelled setup are "Setup the environment variables","Initialize the database.","Choose a framework".
+    -> Example of boxes labelled "important" are "Implement user authentication","Implement the machine learning algorithm","Perform Exploratory Data Analysis".
+    -> Example of boxes labelled "testing" are "Perform testing on the application","Perform input validation."
     -> The response will be sent to the Front-End in the form of a JSON Object, so consistency, reliability, and accuracy of your generated responses based on the given formats is CRITICAL.
     -> The USER wants a DETAILED BREAKDOWN on how to solve the given problem. Breakdown every step into as many sub-steps as possible and make seperate boxes for each substep. EXPLICITLY state how to implement each of the step while also mentioning the relevant technologies.
     -> Also make sure to include one to many relations (in which one box is connected to many other boxes), many to one (in which many boxes are connected to one box), and the relations in which both boxes have connections towards each other in the workflow and give them in the form of the given format, always AVOID a linear workflow. 
@@ -328,5 +339,3 @@ def getResponse(description,languages,context):
     response = getFormattedGPTResponse(systemPrompt, userPrompt)
 
     return response
-
-# In production we will make sure that we can only call one function from this python file and that this file cannot be executed on its own

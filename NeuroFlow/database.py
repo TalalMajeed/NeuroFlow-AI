@@ -5,6 +5,7 @@ import json
 import base64
 import string
 import random
+import datetime as dt
 
 conn = None
 
@@ -91,16 +92,69 @@ def getSQLUser(id):
         cur.close()
 
         for row in rows:
-            if row[6]:
-                image = row[6]
+            if row[7]:
+                image = row[7]
                 image = base64.b64encode(image).decode('utf-8')
                 image = base64.b64decode(image).decode('utf-8')
                 image = f"data:image/png;base64,{image}"
             else:
                 image = None
-            user_dict = {'id': row[0], 'name': row[1], 'gender':row[2], 'email': row[3],'description': row[5], 'image':image, 'occupation':row[7]}
+            user_dict = {'id': row[0], 'name': row[1], 'gender':row[2], 'email': row[3],'description': row[5], 'image':image, 'occupation':row[6], 'total':row[8]}
     
+
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM diagrams WHERE userID = %s ORDER BY date DESC", (id,))
+        rows = cur.fetchall()
+        cur.close()
+
+        diagram_list = []
+        for row in rows:
+            diagram_dict = {'DiagramID': row[0], 'name': row[2],'loading':False}
+            diagram_list.append(diagram_dict)
+
+        today = 0
+        testDate = dt.date.today()
+
+        for row in rows:
+            if row[5] == testDate:
+                print("INDEXING: " + str(row[5]))
+
+                temp = row[4]
+                temp = base64.b64encode(temp).decode('utf-8')
+                temp = base64.b64decode(temp).decode('utf-8')
+                temp = json.loads(temp)
+
+                if temp != [[],[]]:
+                    today += 1
+
+        user_dict['diagramCount'] = len(diagram_list)
+        user_dict['today'] = today
+
+        if len(diagram_list) > 2:
+            diagram_list = diagram_list[:2]
+
+        user_dict['diagrams'] = diagram_list
         return json.dumps(user_dict)
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def getSQLRecent(id):
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM diagrams WHERE userID = %s ORDER BY date DESC LIMIT 2", (id,))
+        rows = cur.fetchall()
+        cur.close()
+
+        diagram_list = []
+        for row in rows:
+            diagram_dict = {'DiagramID': row[0], 'name': row[2]}
+            diagram_list.append(diagram_dict)
+
+        return json.dumps(diagram_list)
     
     except Exception as e:
         print(f"Error: {e}")
@@ -180,7 +234,7 @@ def createSQLUser(email, password, name, gender, occupation):
                 break
 
         cur = conn.cursor()
-        cur.execute("INSERT INTO users (userID, email, password, gender, name, occupation) VALUES (%s, %s, %s, %s, %s, %s)", (userID, email, password, gender, name, occupation))
+        cur.execute("INSERT INTO users (userID, email, password, gender, name, occupation, total) VALUES (%s, %s, %s, %s, %s, %s, 0)", (userID, email, password, gender, name, occupation))
 
         conn.commit()
         cur.close()
@@ -272,18 +326,6 @@ def saveSQLInfo(id, description, image):
     except Exception as e:
         print(f"Error: {e}")
         return -1
-
-'''
-CREATE TABLE "diagrams" (
-    "diagramID" VARCHAR(5) PRIMARY KEY,
-    "userID" VARCHAR(5),
-    "name" VARCHAR(45),
-    "description" VARCHAR(100),
-    "data" BYTEA,
-    "date" DATE,
-    FOREIGN KEY ("userID") REFERENCES "users"("userID")
-);
-'''
 
 @Query
 def saveSQLDiagram(uid,data,title):
@@ -420,15 +462,30 @@ def getSQLDiagram(did):
         cur.close()
 
         for row in rows:
-            if row[3]:
-                data = row[3]
+            if row[4]:
+                data = row[4]
                 data = base64.b64encode(data).decode('utf-8')
                 data = base64.b64decode(data).decode('utf-8')
             else:
                 data = None
             diagram_dict = {'DiagramId': row[0], 'name': row[2], 'data': data}
     
+        print(diagram_dict)
         return json.dumps(diagram_dict)
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def increaseTotal(uid):
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("UPDATE users SET total = total + 1 WHERE userID = %s", (uid,))
+        conn.commit()
+        cur.close()
+        return 1
     
     except Exception as e:
         print(f"Error: {e}")

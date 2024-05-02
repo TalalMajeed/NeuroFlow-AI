@@ -9,6 +9,12 @@ class Container:
             box.setContainer(self)
         self.numberOfBoxes = len(boxes)
         self.reversedConnections = reversedConnections
+        self.startingX = 200
+        self.startingY = 200
+        self.standardIncrement = 600
+        self.xpad = 120
+        self.ypad = 120
+        self.padValue = 120
 
     def getBoxes(self):
         return self.boxes
@@ -62,9 +68,6 @@ class Container:
         # We will now find out the reverse connections, first we pass the grid into the determineReverseConnections method
         self.determineReverseConnections(tempGrid)
 
-        # This will be how we will set the reverse connections
-        self.reversedConnections = tempGrid.reversedConnections
-
         # We will find out all those boxes, that are the sources but do not originate from anywhere, and will set the coordinates of them beforehand
         destinationBoxes = []
         sourceBoxes = []
@@ -73,30 +76,38 @@ class Container:
         # So we will iterate over the connections of the non-reverse boxes
         for connection in self.connections:
             isReverse = False
-            for reverseConnection in self.reversedConnections:
+            for reverseConnection in tempGrid.reversedConnections:
                 if (Connection.compareConnections(connection,reverseConnection) == True):
                     # If it is one of the reverse connections we will not add it to the destination boxes
                     isReverse = True
+                    self.reversedConnections.append(connection)
                     break
             # In case the connection in not reverse we will append it to the target boxes
             if isReverse == False:
                 destinationBoxes.append(connection.target)
 
         # This will store the number of source boxes to initialize their position
-        sourceBoxNumber = 1
+        sourceBoxNumber = 0
 
         # Now we will loop through all the boxes and find out the boxes that are the sources, and we will set their coordinates
         for box in self.boxes:
             if box not in destinationBoxes:
                 sourceBoxes.append(box)
-                box.setCoordinates(0,600 * sourceBoxNumber)
+                box.setCoordinates(self.startingX ,self.startingY + self.standardIncrement * sourceBoxNumber)
                 box.confirmPlacement()
                 box.setTargetCoordinates()
                 # We will append this node to the list of nodes
                 sourceBoxNumber += 1
+
+        # Now we will find out the last boxes
+        self.determineLastBoxes()
+
+        # After doing this we will cause a shift in the boxes, effectively distorting them, in a systematic way
+        self.distortBoxes()
          
         # If we find out that the set of all the encompassed boxes by all the current nodes is the same as the set of all the boxes, it means we have found out all the nodes
         # This will be the set of boxes encompassed by all the current nodes
+        self.scaleBackToWindow()
         
         # If we do not get the same value we will find all the nodes from the given set of destination boxes
 
@@ -109,11 +120,91 @@ class Container:
                     return True
         return False
     
+    # This will be the function that will determine the boxes that are at last
+    def determineLastBoxes(self):
+        for box in self.boxes:
+            isLast = True
+            for connection in box.connections:
+                if connection not in self.reversedConnections:
+                    if Box.compareBoxes(box,connection.source) == True:
+                        isLast = False
+            # If the box is still not found in the source of another box it means that it is the last box
+            if isLast == True:
+                box.isLast = True
+
+    
     # This will be the method that will allocate the connections to the boxes
     def allocateConnections(self):
         for connection in self.connections:
             connection.source.setConnection(connection)
 
+    # This will be the function that will distort the placement of the boxes in a systematic way
+    def distortBoxes(self):
+        # Dictionary to store boxes with same x-coordinate
+        sameXBoxes = {}
+        sameYBoxes = {}
+
+        # Iterate over the boxes
+        for box in self.boxes:
+            if (box.hasPlaced == True):
+                # If it is a new x value, create a new list for that x-coordinate
+                if box.x not in sameXBoxes:
+                    sameXBoxes[box.x] = []
+                # Append the box to the list corresponding to its x-coordinate
+                sameXBoxes[box.x].append(box)
+                # If it is a new y value, create a new list for the y-coordinate
+                if box.y not in sameYBoxes:
+                    sameYBoxes[box.y] = []
+                # Append the box to the list corresponding to its y-coordinate
+                sameYBoxes[box.y].append(box)
+
+        # Sort the boxes in the same x-coordinate
+        self.sortBoxes(sameXBoxes,"y")
+
+        # Sort the boxes in the same y-coordinate
+        self.sortBoxes(sameYBoxes,"x")
+
+        # Shift the boxes in the same x-coordinate, by some y coordinate
+        self.shiftBoxes(sameXBoxes,"x")
+
+        # Shift the boxes in the same y-coordinate
+        self.shiftBoxes(sameYBoxes,"y")
+    
+    # We will sort the boxes in the same x-coordinate, based on the yCoordinate
+    def sortBoxes(self,boxes,coordinate):
+        if (coordinate == "x"):
+            for key in boxes:
+                boxes[key].sort(key = lambda x: x.x)
+        elif (coordinate == "y"):
+            for key in boxes:
+                boxes[key].sort(key = lambda x: x.y)
+
+    # This will now loop over the arranged boxes, and will increment or decrement their coordinates by the padding value
+    def shiftBoxes(self,boxes,coordinate):
+        for key in boxes:
+            # This will be the list of the boxes, with the same coordinates that have been already sorted
+            sameBoxes = boxes[key]
+            for counter,sameBox in enumerate(sameBoxes):
+                if (counter % 2 == 0):
+                    if (coordinate == "y"):
+                        sameBox.shiftY(self.padValue)
+                    elif (coordinate == "x"):
+                        sameBox.shiftX(self.padValue)
+                else:
+                    if (coordinate == "y"):
+                        sameBox.shiftY(-1 * self.padValue)
+                    elif (coordinate == "x"):
+                        sameBox.shiftX(-1 * self.padValue)
+
+    # This will get the most negative value of y, and then will add the absolute value of that to all the y coordinates
+    def scaleBackToWindow(self):
+        mostNegativeValue = 0
+        for box in self.boxes:
+            if box.y < mostNegativeValue:
+                mostNegativeValue = box.y
+        for box in self.boxes:
+            box.shiftY(abs(mostNegativeValue))
+            
 # This will be the class that will be used to represent the boxes
 class Box:
     def __init__(self, name, width, height, x = None, y = None,container = None,adjacentBoxes = []):
@@ -125,6 +216,15 @@ class Box:
         self.y = y
         self.hasPlaced = False
         self.container = container
+        self.isLast = False
+        self.isRightIn = False
+        self.isRightOut = False
+        self.isLeftIn = False
+        self.isLeftOut = False
+        self.isTopIn = False
+        self.isTopOut = False
+        self.isBottomIn = False
+        self.isBottomOut = False
     
     def setConnection(self, connection):
         self.connections.append(connection)
@@ -145,8 +245,8 @@ class Box:
         # If it is a overlap in which the self box is to the left of box2, we will return 3
         # If it is a overlap in which the self box is to the right of box2, we will return 4
         # If there is no overlap we will return 0 
-        box2NewWidth,box2NewHeight = Box.getPaddedCoordinates(self.width,self.height,50)
-        box1NewWidth,box1NewHeight = Box.getPaddedCoordinates(box2.width,box2.height,50)
+        box2NewWidth,box2NewHeight = Box.getPaddedCoordinates(self.width,self.height,self.container.padValue)
+        box1NewWidth,box1NewHeight = Box.getPaddedCoordinates(box2.width,box2.height,self.container.padValue)
         # This can only be done if the two boxes have been placed
         if (box2.hasPlaced == False or self.hasPlaced == False):
             return 0
@@ -184,6 +284,14 @@ class Box:
         if (self.hasPlaced == False):
             self.x = x
             self.y = y
+
+    # This will be the function that will shift the x coordinates, by a given value of the boxes
+    def shiftX(self,xIncrement):
+        self.x += xIncrement
+
+    # This will be the function that will shift the y coordinates, by a given value
+    def shiftY(self,yIncrement):
+        self.y += yIncrement
     
     # This will be the method that will confirm the placement of the boxes
     def confirmPlacement(self):
@@ -203,7 +311,7 @@ class Box:
 
         # We will place the unPlacedConnections
         for connection in unPlacedConnections:
-            connection.target.setCoordinates(self.x + self.width + 50, self.y)
+            connection.target.setCoordinates(self.x + self.width + self.container.xpad, self.y)
             connection.target.confirmPlacement()
             connection.setConnection("right","left")
             connection.target.testTargetCoordinates()
@@ -234,7 +342,7 @@ class Box:
                 unPlacedConnections.append(connection)
         
         # First we will place all the unPlaced target boxes in such a way that they are placed in the same row as the source box, and we will also stack them on top of each other
-        self.placeUnplacedBoxes(unPlacedConnections, 50, 0)
+        self.placeUnplacedBoxes(unPlacedConnections, self.container.xpad, 0)
 
         # Then we will make make the connections between the boxes that have been already placed
         self.placePlacedBoxes(placedConnections)
@@ -256,15 +364,15 @@ class Box:
             if isOverlapDetected != 0:
                 # For an upper overlap we will decrement the y counter
                 if isOverlapDetected == 1:
-                    self.placeUnplacedBoxes(unPlacedConnections, startingXPosition, startingYPosition - 50)
+                    self.placeUnplacedBoxes(unPlacedConnections, startingXPosition, startingYPosition - 2 * self.container.padValue)
                 # For an lower overlap we will increment the y counter
                 if isOverlapDetected == 2:
-                    self.placeUnplacedBoxes(unPlacedConnections, startingXPosition, startingYPosition + 50)
+                    self.placeUnplacedBoxes(unPlacedConnections, startingXPosition, startingYPosition + 2 * self.container.padValue)
                 # For a right overlap we will increment the x counter
                 if isOverlapDetected == 3:
-                    self.placeUnplacedBoxes(unPlacedConnections, startingXPosition + 50, startingYPosition)
+                    self.placeUnplacedBoxes(unPlacedConnections, startingXPosition + 2 * self.container.padValue, startingYPosition)
                 # For a left overlap( Very unlikely, we will decrement the y counter, because the boxes are placed in the same row, so we will decrement the y counter)
-                self.placeUnplacedBoxes(unPlacedConnections, startingXPosition, startingYPosition - 50)
+                self.placeUnplacedBoxes(unPlacedConnections, startingXPosition, startingYPosition - self.container.ypad)
                 return
             
         # Once we are sure of no overlaps we will confirm the placement of the boxes and we will also set the source edge and the target edge of the connection
@@ -275,16 +383,16 @@ class Box:
     def setEvenConnections(self,unPlacedConnections,startingXPosition,startingYPosition):
         for i in range(len(unPlacedConnections)):
             if i == 0:
-                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, self.y + startingYPosition - 50 - unPlacedConnections[i].target.height)
+                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, self.y + startingYPosition - self.container.ypad - unPlacedConnections[i].target.height)
 
             elif (i == 1):
-                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, self.y + startingYPosition + self.height + 50)
+                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, self.y + startingYPosition + self.height + self.container.ypad)
             
             elif (i % 2 == 0):
-                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, unPlacedConnections[i - 2].y + startingYPosition - 50)
+                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, unPlacedConnections[i - 2].target.y + startingYPosition - self.container.ypad - unPlacedConnections[i].target.height)
             
             elif (i % 2 == 1):
-                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, unPlacedConnections[i - 2].y + startingYPosition + unPlacedConnections[i - 2].height + 50)
+                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, unPlacedConnections[i - 2].target.y + startingYPosition + unPlacedConnections[i - 2].target.height + self.container.ypad)
 
     
     def setOddConnections(self,unPlacedConnections,startingXPosition,startingYPosition):
@@ -293,16 +401,16 @@ class Box:
                 unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, self.y + startingYPosition)
 
             elif (i == 1):
-                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, self.y + startingYPosition - 100 - unPlacedConnections[i].target.height)
+                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, self.y + startingYPosition - self.container.ypad - unPlacedConnections[i].target.height)
             
             elif (i == 2):
-                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, self.y + startingYPosition + self.height + 100)
+                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, self.y + startingYPosition + self.height + self.container.ypad)
 
             elif (i % 2 == 1):
-                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, unPlacedConnections[i - 2].y + startingYPosition - 100)
+                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, unPlacedConnections[i - 2].target.y + startingYPosition - self.container.ypad - unPlacedConnections[i - 2].target.height)
             
             elif (i % 2 == 0):
-                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, unPlacedConnections[i - 2].y + startingYPosition + unPlacedConnections[i - 2].height + 100)
+                unPlacedConnections[i].target.setCoordinates(self.x + self.width + startingXPosition, unPlacedConnections[i - 2].target.y + startingYPosition + unPlacedConnections[i - 2].target.height + self.container.ypad)
             
 
     # For the already placed connections, we will set their connections only in accordance with the relative heights of the two boxes
@@ -334,7 +442,17 @@ class Box:
                     else:
                         connection.setConnection("down","up")
                 else:
-                    connection.setConnection("right","right")
+                    # In case the target is the last box we will go for the right, right case
+                    if connection.target.isLast == True:
+                        connection.setConnection("right","right")
+                    # In case the target is not the last box we will check out the which of the four connections is free
+                    else:
+                        if connection.source.isTopIn == False:
+                            connection.setConnection("up","left")
+                        elif connection.source.isBottomIn == False:
+                            connection.setConnection("down","left")
+                        else:
+                            connection.setConnection("right","left")
 
     # This will be the function that will compare two boxes, two boxes are equal if they have the same width, height, x and y coordinates
     def compareBoxes(box1,box2):
@@ -362,11 +480,12 @@ class Box:
             return False
         # For two adjacent boxes, you can find that by using the formula
         # For box2 above the box1
-        if box2.y == box1.y - box1.height - 100:
+        # I am assuming that the ypad is 100,and the container of the box1 is the same as the box2
+        if box2.y == box1.y - box1.height - box1.container.ypad:
             return True
         
         # For box1 above box2 
-        if box1.y == box2.y - box2.height - 100:
+        if box1.y == box2.y - box2.height - box1.container.ypad:
             return True
         
         # If either of the cases do not occur we will return false
@@ -407,6 +526,26 @@ class Connection():
     def setConnection(self,sourceEdge,targetEdge):
         self.sourceEdge = sourceEdge
         self.targetEdge = targetEdge
+        match sourceEdge:
+            case "right":
+                self.source.isRightOut = True
+            case "left":
+                self.source.isLeftOut = True
+            case "up":
+                self.source.isTopOut = True
+            case "down":
+                self.source.isBottomOut = True
+        match targetEdge:
+            case "right":
+                self.target.isRightIn = True
+            case "left":
+                self.target.isLeftIn = True
+            case "up":
+                self.target.isTopIn = True
+            case "down":
+                self.target.isBottomIn = True
+        
+
 
     # If it is a reverse connection we will declare it as a reverse connection
     def declareReverse(self):
@@ -437,7 +576,7 @@ class Connection():
         if Box.compareBoxes(connection1.source,connection2.source) and Box.compareBoxes(connection1.target,connection2.target):
             return True
         return False
-
+    
 def generatePlacement(x,y):
     boxes = []
     connections = []

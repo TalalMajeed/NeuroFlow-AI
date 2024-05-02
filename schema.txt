@@ -6,8 +6,10 @@ CREATE TABLE "users" (
     "password" VARCHAR(45),
     "description" VARCHAR(100),
     "occupation" VARCHAR(45),
-    "image" BYTEA
+    "image" BYTEA,
+    "total" INT
 );
+
 
 CREATE TABLE "diagrams" (
     "diagramID" VARCHAR(5) PRIMARY KEY,

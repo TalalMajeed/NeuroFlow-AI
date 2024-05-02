@@ -57,6 +57,16 @@ def login():
 
     return jsonify({"status": 500, "message": "Internal Server Error"})
 
+@app.route('/getRecent', methods=['POST'])
+@RequiredToken
+def getRecent():
+    data = request.get_json()
+    x = getSQLRecent(data['uid'])
+
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": "Recent Diagrams Retrieved", "data": x})
+
 @app.route('/createUser', methods=['POST'])
 def create():
     data = request.get_json()
@@ -209,6 +219,7 @@ def generate():
         y = ast.literal_eval(x)
         boxes_info = list(y['boxesInformation'].values())
         connections_info = y['connectionsInformation']
+        print(boxes_info)
 
         waitingData.append([generateID, x])
         return jsonify({"status": 200, "message": "Response generated", "data": [boxes_info, connections_info], "id": generateID})
@@ -221,6 +232,8 @@ def generate():
 def complete():
     data = request.get_json()
     current = None
+
+    increaseTotal(data['uid'])
 
     for i in waitingData:
         if i[0] == data['id']:
