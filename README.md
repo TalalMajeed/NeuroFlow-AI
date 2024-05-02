@@ -61,6 +61,17 @@ To run this project, you will need to add the following environment variables
 
 Insert gif or link to demo
 
+## Example for Testing
+
+**General Description of problem/project:**
+How to create a Decentralized Voting System Web Application
+
+**Set of technologies/resources:**
+Solidity, Web 3.0
+
+**Additional Context:**
+I am a student and I want to create a Decentralized voting system for my end semester project. This project should allow the admins to add new candidates and allow people to vote based on smart contract system and the etherium blockchain.
+
 
 ## Tech Stack
 
