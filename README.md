@@ -9,19 +9,31 @@ An efficient 21st-century tool that helps its clients design comprehensive and o
 
 ## Features
 
-- Light/dark mode toggle
-- Live previews
-- Fullscreen mode
-- Cross platform
+- Computer Based Web Application
+- Available on the Internet
+- Live Diagram Generation
+- Diagram & Workflow Storage
+- User Account Management
+- Colorful Flowchart Generation
 
 
 ## Installation
 
-Install 
+Have Python installed (3.10v at least)
 
+Clone the repository into your desired directory on Command Prompt / Terminal
 ```bash
-  npm install my-project
-  cd my-project
+  git clone https://github.com/TalalMajeed/NeuroFlow-AI.git
+```
+
+Install *requirements.txt* 
+```bash
+  pip install -r "requirements.txt"
+```
+
+Start the Web Application by running:
+```bash
+  python localtest.py
 ```
     
 ## Environment Variables
