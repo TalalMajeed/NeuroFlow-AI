@@ -148,6 +148,51 @@ def reset():
         return jsonify({"status": 500, "message": "Internal Server Error"})
     return jsonify({"status": 200, "message": "Password reset"})
 
+@app.route('/savediagram', methods=['POST'])
+@RequiredToken
+def saveDiagram():
+    data = request.get_json()
+
+    if not data['did'] or data['did'] == "" or data['did'] == "Unsaved":
+        x = saveSQLDiagram(data['uid'], data['data'],data['title'])
+    else:
+        x = updateSQLDiagram(data['did'], data['data'],data['title'])
+
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": "Diagram Saved", "data": x})
+
+@app.route('/deletediagram', methods=['POST'])
+@RequiredToken
+def deleteDiagram():
+    data = request.get_json()
+    x = deleteSQLDiagram(data['did'])
+
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": "Diagram Deleted"})
+
+@app.route('/getdiagrams', methods=['POST'])
+@RequiredToken
+def getDiagrams():
+    data = request.get_json()
+    print(data['uid'])
+    x = getSQLDiagrams(data['uid'])
+
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": "Diagrams Retrieved", "data": x})
+
+@app.route('/getdiagram', methods=['POST'])
+@RequiredToken
+def getDiagram():
+    data = request.get_json()
+    x = getSQLDiagram(data['did'])
+
+    if x == -1:
+        return jsonify({"status": 500, "message": "Internal Server Error"})
+    return jsonify({"status": 200, "message": "Diagram Retrieved", "data": x})
+
 @app.route('/generate', methods=['POST'])
 @RequiredToken
 def generate():
@@ -174,7 +219,6 @@ def generate():
 @app.route('/complete', methods=['POST'])
 @RequiredToken
 def complete():
-    print("Completing")
     data = request.get_json()
     current = None
 
@@ -191,9 +235,6 @@ def complete():
     did = data['id']
     dim = data['dim']
 
-    print("DIM",dim)
-
-
     for i in range(len(dim)):
         dim[i] = ["B" + str(i+1), dim[i][0], dim[i][1]]
 
@@ -201,6 +242,7 @@ def complete():
     connections_info = data['connectionsInformation']
 
     print("CONNECTIONS_INFO",connections_info)
+    print("BOXES_INFO",dim)
 
     placement = generatePlacement(dim, connections_info)
 

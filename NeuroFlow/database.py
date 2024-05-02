@@ -272,3 +272,164 @@ def saveSQLInfo(id, description, image):
     except Exception as e:
         print(f"Error: {e}")
         return -1
+
+'''
+CREATE TABLE "diagrams" (
+    "diagramID" VARCHAR(5) PRIMARY KEY,
+    "userID" VARCHAR(5),
+    "name" VARCHAR(45),
+    "description" VARCHAR(100),
+    "data" BYTEA,
+    "date" DATE,
+    FOREIGN KEY ("userID") REFERENCES "users"("userID")
+);
+'''
+
+@Query
+def saveSQLDiagram(uid,data,title):
+    print(uid,data,title)
+    print("STARTING")
+    id = codeGenerate()
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM diagrams WHERE diagramID = %s", (id,))
+        rows = cur.fetchall()
+
+        diagram_list = []
+        for row in rows:
+            diagram_dict = row[0]
+            diagram_list.append(diagram_dict)
+
+        print(diagram_list)
+
+        while id in diagram_list:
+            id = codeGenerate()
+
+        print(id)
+
+        #Convert data to BYTEA
+        if data:
+            #Convert this array to JSON then to bytes
+            data = json.dumps(data)
+            data = bytes(data, "utf-8")
+        else:
+            data = None
+
+        print(data)
+
+        cur = conn.cursor()
+        cur.execute("INSERT INTO diagrams (diagramID, userID, name, data, date) VALUES (%s, %s, %s, %s, CURRENT_DATE)", (id, uid, title, data))
+        conn.commit()
+        cur.close()
+
+        return id
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def updateSQLDiagram(did,data,title):
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM diagrams WHERE diagramID = %s", (did,))
+        rows = cur.fetchall()
+
+        diagram_list = []
+        for row in rows:
+            diagram_dict = row[0]
+            diagram_list.append(diagram_dict)
+
+        if did not in diagram_list:
+            return -2
+
+        #Convert data to BYTEA
+        if data:
+            #Convert this array to JSON then to bytes
+            data = json.dumps(data)
+            data = bytes(data, "utf-8")
+        else:
+            data = None
+
+        cur = conn.cursor()
+        cur.execute("UPDATE diagrams SET name = %s, data = %s WHERE diagramID = %s", (title, data, did))
+        conn.commit()
+        cur.close()
+
+        return did
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def deleteSQLDiagram(did):
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM diagrams WHERE diagramID = %s", (did,))
+        rows = cur.fetchall()
+
+        diagram_list = []
+        for row in rows:
+            diagram_dict = row[0]
+            diagram_list.append(diagram_dict)
+
+        if did not in diagram_list:
+            return -2
+
+        cur = conn.cursor()
+        cur.execute("DELETE FROM diagrams WHERE diagramID = %s", (did,))
+        conn.commit()
+        cur.close()
+
+        return 1
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+        
+
+
+@Query
+def getSQLDiagrams(uid):
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM diagrams WHERE userID = %s", (uid,))
+        rows = cur.fetchall()
+        cur.close()
+
+        diagram_list = []
+        for row in rows:
+            diagram_dict = {'DiagramId': row[0], 'name': row[2]}
+            diagram_list.append(diagram_dict)
+
+        return json.dumps(diagram_list)
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+
+@Query
+def getSQLDiagram(did):
+    global conn
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM diagrams WHERE diagramID = %s", (did,))
+        rows = cur.fetchall()
+        cur.close()
+
+        for row in rows:
+            if row[3]:
+                data = row[3]
+                data = base64.b64encode(data).decode('utf-8')
+                data = base64.b64decode(data).decode('utf-8')
+            else:
+                data = None
+            diagram_dict = {'DiagramId': row[0], 'name': row[2], 'data': data}
+    
+        return json.dumps(diagram_dict)
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
