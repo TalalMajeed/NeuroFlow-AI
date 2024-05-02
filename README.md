@@ -17,7 +17,8 @@ An efficient 21st-century tool that helps its clients design comprehensive and o
 
 ## Deployment Site
 
-[NeuroFlow](https://neuro-flow-ai.vercel.app/welcome)
+Website for application deployed:
+[Click here](https://neuro-flow-ai.vercel.app/welcome) to open
 
 
 ## Installation
