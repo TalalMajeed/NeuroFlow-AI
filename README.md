@@ -40,9 +40,13 @@ Start the Web Application by running:
 
 To run this project, you will need to add the following environment variables to your .env file
 
-`API_KEY`
+`OPENAI_API_KEY`  OpenAI's API key to configure ChatGPT-3.5-turbo model
 
-`ANOTHER_API_KEY`
+`POSTGRES_HOST`  Link of database server
+
+`POSTGRES_USER`  Database User
+  
+`POSTGRES_PASSWORD`  Database Password
 
 
 ## Deployment
