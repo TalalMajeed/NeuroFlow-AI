@@ -1,6 +1,6 @@
 # NeuroFlow
 
-An efficient 21st-century tool that helps its clients design comprehensive and optimized solution workflows for their projects.
+An efficient 21st-century tool made by team **technovators** for **2024 AI Challenge** that helps its clients design comprehensive and optimized solution workflows for their projects.
 
 <img src=https://github.com/TalalMajeed/NeuroFlow-AI/blob/master/NeuroFlow/static/assets/logo-BNZQ-ew0.png alt=Logo height=200 width=200 />
 
@@ -52,6 +52,9 @@ To run this project, you will need to add the following environment variables
   
 `POSTGRES_PASSWORD`  Database Password
 
+
+## Database Model
+Initialize Application database in server using **Schema.txt** given
 
 ## Screenshots
 
