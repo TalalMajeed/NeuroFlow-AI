@@ -23,14 +23,14 @@ Website for application deployed:
 
 ## Installation
 
-Have Python installed (3.10v at least)
+Make sure to have Python installed (3.10v at least)
 
 Clone the repository into your desired directory on Command Prompt / Terminal
 ```bash
   git clone https://github.com/TalalMajeed/NeuroFlow-AI.git
 ```
 
-Install *requirements.txt* 
+Install Python dependencies in **requirements.txt** 
 ```bash
   pip install -r "requirements.txt"
 ```
@@ -42,7 +42,7 @@ Start the Web Application by running:
     
 ## Environment Variables
 
-To run this project, you will need to add the following environment variables to your .env file
+To run this project, you will need to add the following environment variables 
 
 `OPENAI_API_KEY`  OpenAI's API key to configure ChatGPT-3.5-turbo model
 
@@ -64,16 +64,26 @@ Insert gif or link to demo
 
 ## Tech Stack
 
-**Client:** Vue, Redux, TailwindCSS
+**Front-end:** 
+- Vue3, Composition API
+- Vite Frontend Server
+- Vuetify Theme Library
+- Fetch API
+- HTML 5 Canvas
 
-**Server:** Vercel
+**Back-end:** 
+- Python Flask Server
+- psycopg2 Connector
+- OpenAI Library
+- JWT Token Authentication
+
+**Database:**
+- Vercel PostGreSQL
 
 
 ## Authors
 
-- [@octokatherine](https://www.github.com/octokatherine)
-
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
+- [@bilalrana351](https://github.com/bilalrana351)
+- [@TalalMajeed](https://github.com/TalalMajeed)
+- [@Saim-Kaleem](https://github.com/Saim-Kaleem)
+- [@EznXadee](https://github.com/EznXadee)
