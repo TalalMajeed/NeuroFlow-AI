@@ -104,7 +104,6 @@ class Container:
 
         # After doing this we will cause a shift in the boxes, effectively distorting them, in a systematic way
         self.distortBoxes()
-         
         # If we find out that the set of all the encompassed boxes by all the current nodes is the same as the set of all the boxes, it means we have found out all the nodes
         # This will be the set of boxes encompassed by all the current nodes
         self.scaleBackToWindow()
@@ -523,27 +522,27 @@ class Connection():
         self.sourceEdge = None
         self.targetEdge = None
 
-    def setConnection(self,sourceEdge,targetEdge):
+    def setConnection(self, sourceEdge, targetEdge):
         self.sourceEdge = sourceEdge
         self.targetEdge = targetEdge
-        match sourceEdge:
-            case "right":
-                self.source.isRightOut = True
-            case "left":
-                self.source.isLeftOut = True
-            case "up":
-                self.source.isTopOut = True
-            case "down":
-                self.source.isBottomOut = True
-        match targetEdge:
-            case "right":
-                self.target.isRightIn = True
-            case "left":
-                self.target.isLeftIn = True
-            case "up":
-                self.target.isTopIn = True
-            case "down":
-                self.target.isBottomIn = True
+    
+        if sourceEdge == "right":
+            self.source.isRightOut = True
+        elif sourceEdge == "left":
+            self.source.isLeftOut = True
+        elif sourceEdge == "up":
+            self.source.isTopOut = True
+        elif sourceEdge == "down":
+            self.source.isBottomOut = True
+
+        if targetEdge == "right":
+            self.target.isRightIn = True
+        elif targetEdge == "left":
+            self.target.isLeftIn = True
+        elif targetEdge == "up":
+            self.target.isTopIn = True
+        elif targetEdge == "down":
+            self.target.isBottomIn = True
         
 
 
