@@ -14,7 +14,7 @@ class Container:
         self.standardIncrement = 600
         self.xpad = 120
         self.ypad = 120
-        self.padValue = 120
+        self.padValue = 60
 
     def getBoxes(self):
         return self.boxes
@@ -104,6 +104,10 @@ class Container:
 
         # After doing this we will cause a shift in the boxes, effectively distorting them, in a systematic way
         self.distortBoxes()
+
+        # This will resolve any overlap that will be caused after this distortion
+        self.resolveOverlaps()
+        
         # If we find out that the set of all the encompassed boxes by all the current nodes is the same as the set of all the boxes, it means we have found out all the nodes
         # This will be the set of boxes encompassed by all the current nodes
         self.scaleBackToWindow()
@@ -112,12 +116,12 @@ class Container:
 
 
     # This will be where we will check whether a particular box overlaps with another box
-    def checkBoxOverlap(self, box):
+    def checkBoxOverlap(self, box, padValue):
         for otherBox in self.boxes:
             if otherBox.hasPlaced == True:
-                if box.checkOverlap(otherBox):
-                    return True
-        return False
+                if box.checkOverlap(otherBox,padValue) != 0:
+                    return box.checkOverlap(otherBox,padValue)
+        return 0
     
     # This will be the function that will determine the boxes that are at last
     def determineLastBoxes(self):
@@ -203,6 +207,39 @@ class Container:
                 mostNegativeValue = box.y
         for box in self.boxes:
             box.shiftY(abs(mostNegativeValue))
+    
+    # This will be the method that will resolve any overlap in the end
+    def resolveOverlaps(self):
+        # This will check whether there is any overlap or not
+        isNoOverLapDetected = False
+
+        # While any overlap 
+        while(isNoOverLapDetected == False):
+            # Now in this loop I will make it true, we want to see that when there is an overlap, we will make it false
+            isNoOverLapDetected = True
+            # We will iterate over all the boxes
+            for box in self.boxes:
+                # If the box has aleady been placed, we will check for the overlap
+                if (box.hasPlaced == True):
+                    # If there is an overlap we will shift the box, in accordance to the overlap detected
+                    # I have set a padding of 20 in this case
+                    isOverlapDetected = self.checkBoxOverlap(box,20)
+                    if isOverlapDetected != 0:
+                        # Now that there is an overlap, we can make it false
+                        isNoOverLapDetected = False
+
+                        # We will check for the different kinds of overlaps in any case
+                        # In case of an upper overlap
+                        if isOverlapDetected == 1:
+                            box.shiftY(-1 * self.padValue)
+                        # In case of an lower overlap
+                        elif isOverlapDetected == 2:
+                            box.shiftY(self.padValue)
+                        # In case of an right overlap
+                        elif isOverlapDetected == 4:
+                            box.shiftX(self.padValue)
+                        # I have not done the left overlap, as it will require decrementing the values, that can lead to negative values for the boxes
+                                                
             
 # This will be the class that will be used to represent the boxes
 class Box:
@@ -238,14 +275,14 @@ class Box:
         return width + padding,height + padding
 
     # This will be used to check for the overlap of the boxes, and we will also check out the type of the overlap
-    def checkOverlap(self,box2):
+    def checkOverlap(self,box2,paddingValue):
         # If it is a overlap in which the self box is above box2, we will return 1
         # If it is a overlap in which the self box is below box2, we will return 2
         # If it is a overlap in which the self box is to the left of box2, we will return 3
         # If it is a overlap in which the self box is to the right of box2, we will return 4
         # If there is no overlap we will return 0 
-        box2NewWidth,box2NewHeight = Box.getPaddedCoordinates(self.width,self.height,self.container.padValue)
-        box1NewWidth,box1NewHeight = Box.getPaddedCoordinates(box2.width,box2.height,self.container.padValue)
+        box2NewWidth,box2NewHeight = Box.getPaddedCoordinates(self.width,self.height,paddingValue)
+        box1NewWidth,box1NewHeight = Box.getPaddedCoordinates(box2.width,box2.height,paddingValue)
         # This can only be done if the two boxes have been placed
         if (box2.hasPlaced == False or self.hasPlaced == False):
             return 0
@@ -269,13 +306,13 @@ class Box:
         if box1.y > box2.y:
             return 2
         
-        # This will be the condition for a left overlap
-        if box1.x < box2.x:
-            return 3
-        
         # This will be the condition for a right overlap
         if box1.x > box2.x:
             return 4
+        
+        # This will be the condition for a left overlap
+        if box1.x < box2.x:
+            return 3
 
 
     # This will set up the coordinates of the box, but only when we are sure that we have placed the box in the correct position
@@ -359,7 +396,7 @@ class Box:
 
         # After we have placed all the boxes we will check for the overlap of the placed boxes with other boxes, if there is an overlap we will call the function again with a changed starting position, iteratively making sure that all the boxes are placed properly
         for connection in unPlacedConnections:
-            isOverlapDetected = self.container.checkBoxOverlap(connection.target)
+            isOverlapDetected = self.container.checkBoxOverlap(connection.target,self.container.padValue)
             if isOverlapDetected != 0:
                 # For an upper overlap we will decrement the y counter
                 if isOverlapDetected == 1:
@@ -368,10 +405,8 @@ class Box:
                 if isOverlapDetected == 2:
                     self.placeUnplacedBoxes(unPlacedConnections, startingXPosition, startingYPosition + 2 * self.container.padValue)
                 # For a right overlap we will increment the x counter
-                if isOverlapDetected == 3:
+                if isOverlapDetected == 4:
                     self.placeUnplacedBoxes(unPlacedConnections, startingXPosition + 2 * self.container.padValue, startingYPosition)
-                # For a left overlap( Very unlikely, we will decrement the y counter, because the boxes are placed in the same row, so we will decrement the y counter)
-                self.placeUnplacedBoxes(unPlacedConnections, startingXPosition, startingYPosition - self.container.ypad)
                 return
             
         # Once we are sure of no overlaps we will confirm the placement of the boxes and we will also set the source edge and the target edge of the connection
