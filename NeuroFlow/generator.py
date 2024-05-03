@@ -316,26 +316,40 @@ def getSystemPrompt():
     -> You must make sure that the total number of boxes, that is, B1, B2, B3, and so on SHOULD BE AT MOST 18 in any case, you are HIGHLY encouraged to increase the number of boxes in order to provide the maximum information, but the number of bxoes should not be above 18.
 '''
     return prompt
-    
+
+gptCount = 0
 # This is the main function that will be called by the frontend to generate the response
 def getResponse(description,languages,context):
     # Everytime this function is executed we will give the default value of 0 to the number of reprompts variable, and we will reinitialize the boxesInformation and the connectionsInformation
     global noOfReprompts
     global boxesInformation
     global connectionsInforamtion
+    global client
+    global gptCount
 
     noOfReprompts = 0
     boxesInformation = []
     connectionsInforamtion = []
 
-    # First we will get the user prompt from the frontend
-    userPrompt = getUserPrompt(description,languages,context)
+    try:
+        # First we will get the user prompt from the frontend
+        userPrompt = getUserPrompt(description,languages,context)
 
-    # This will be the system prompt that will be used to give the instructions to carry out the work from GPT
-    # These prompts are made by the backend and do not involve any frontend input
-    systemPrompt = getSystemPrompt()
+        # This will be the system prompt that will be used to give the instructions to carry out the work from GPT
+        # These prompts are made by the backend and do not involve any frontend input
+        systemPrompt = getSystemPrompt()
 
-    # This is the response that will be generated from the GPT
-    response = getFormattedGPTResponse(systemPrompt, userPrompt)
+        # This is the response that will be generated from the GPT
+        response = getFormattedGPTResponse(systemPrompt, userPrompt)
 
+    except Exception as e:
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+        client = OpenAI()
+        if (gptCount > 3):
+            return {"status" : 401, "error" : "bad prompt"}
+        response = getFormattedGPTResponse(systemPrompt, userPrompt)
+        gptCount += 1
+
+
+    gptCount = 0
     return response
