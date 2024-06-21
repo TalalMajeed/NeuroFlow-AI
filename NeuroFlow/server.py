@@ -4,15 +4,23 @@ import jwt
 import datetime
 import json
 import ast
+from dotenv import load_dotenv
+import os
 
 
 app = Flask(__name__)
 CORS(app)
 
-from NeuroFlow.database import *
+load_dotenv()
+
 from NeuroFlow.validation import *
 from NeuroFlow.generator import *
 from NeuroFlow.placement import *
+
+if os.getenv("LOCAL") == "0":
+    from NeuroFlow.database import *
+else:
+    from NeuroFlow.dbsqlite import *
 
 waitingData = []
 
@@ -89,7 +97,6 @@ def create():
     return jsonify({"status": 500, "message": "Internal Server Error"})
 
 @app.route('/checkauth', methods=['POST'])
-@RequiredToken
 def checkauth():
     x = getSQLUser(request.get_json()['uid'])
     if x == -1:

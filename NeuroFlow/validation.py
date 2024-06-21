@@ -6,8 +6,13 @@ from flask import request
 import string
 import random
 import psycopg2
+from dotenv import load_dotenv
+import os
 
-from NeuroFlow.database import *
+if os.getenv("LOCAL") == "0":
+    from NeuroFlow.database import *
+else:
+    from NeuroFlow.dbsqlite import *
 
 def RequiredToken(f):
     def wrapper(*args, **kwargs):

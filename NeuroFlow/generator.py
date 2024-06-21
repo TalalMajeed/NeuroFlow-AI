@@ -2,16 +2,22 @@ import openai
 from openai import OpenAI
 import os
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 noOfReprompts = 0
 
 boxesInformation = {}
 connectionsInforamtion = []
 
-print(os.getenv("OPENAI_API_KEY"))
+
 
 # Set the API key and environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+if os.getenv("LOCAL") == "0":
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+else:
+    openai.api_key = os.getenv("LOCAL_API_KEY")
 client = OpenAI()
 
 # Function to call GPT-3/GPT-4  
@@ -343,7 +349,10 @@ def getResponse(description,languages,context):
         response = getFormattedGPTResponse(systemPrompt, userPrompt)
 
     except Exception as e:
-        openai.api_key = os.getenv("OPENAI_API_KEY")
+        if os.getenv("LOCAL") == "0":
+            openai.api_key = os.getenv("OPENAI_API_KEY")
+        else:
+            openai.api_key = os.getenv("LOCAL_API_KEY")
         client = OpenAI()
         if (gptCount > 3):
             return {"status" : 401, "error" : "bad prompt"}
