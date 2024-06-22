@@ -17,7 +17,7 @@ An efficient 21st-century tool made by team **technovators** for **2024 AI Chall
 
 ## Deployment Site
 
-Website for application deployed:
+Website for the application deployed:
 [Click here](https://neuro-flow-ai.vercel.app/welcome) to open
 
 
@@ -35,26 +35,56 @@ Install Python dependencies in **requirements.txt**
   pip install -r "requirements.txt"
 ```
 
-Start the Web Application by running:
+
+## Getting Started (Two Ways)
+
+**1 - Running locally using SQLite:**
+Open `.env` file in NeuroFlow folder in the cloned repository
+
+Set `LOCAL` to 1, set `LOCAL_API_KEY` to your secret OpenAI API key and save changes
+
+Start the Web Application by running in the cloned repository directory:
 ```bash
   python localtest.py
 ```
-    
-## Environment Variables
 
-To run this project, you will need to add the following environment variables 
+**2 - Running locally and Connecting to PostGres:**
+Set the following environment variables:
 
-`OPENAI_API_KEY`  OpenAI's API key to configure ChatGPT-3.5-turbo model
+`OPENAI_API_KEY`  Your OpenAI's API key to configure ChatGPT-3.5-turbo model
 
-`POSTGRES_HOST`  Link of database server
+`POSTGRES_HOST`  ep-billowing-cell-a1ehg1rp-pooler.ap-southeast-1.aws.neon.tech (Link of database server)
 
-`POSTGRES_USER`  Database User
+`POSTGRES_USER`  default (Database User)
   
-`POSTGRES_PASSWORD`  Database Password
+`POSTGRES_PASSWORD`  LJ4pdkjm3KBz (Database Password)
 
+Ensure you have PostGreSQL installed. If not, download and install from [PostGreSQL Official Website](https://www.postgresql.org/download/) 
 
-## Database Model
-Initialize Application database in server using **Schema.txt** given
+Start PostGreSQL service from the Services app or using pgAdmin tool
+
+Open Command Prompt / Terminal and connect to PostGreSQL Server,
+```bash
+  psql -U postgres
+```
+create a new database
+```bash
+  CREATE DATABASE verceldb;
+```
+and then exit psql
+```bash
+  \q
+```
+
+Navigate to your cloned repository directory and run the following command in terminal
+```bash
+  psql -U postgres -d your_database_name -f schema.txt
+```
+
+Start the Web Application by running in the cloned repository directory:
+```bash
+  python localtest.py
+```
 
 ## Screenshots
 
