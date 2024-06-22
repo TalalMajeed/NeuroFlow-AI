@@ -39,6 +39,7 @@ Install Python dependencies in **requirements.txt**
 ## Getting Started (Two Ways)
 
 **1 - Running locally using SQLite:**
+
 Open `.env` file in NeuroFlow folder in the cloned repository
 
 Set `LOCAL` to 1, set `LOCAL_API_KEY` to your secret OpenAI API key and save changes
@@ -49,6 +50,7 @@ Start the Web Application by running in the cloned repository directory:
 ```
 
 **2 - Running locally and Connecting to PostGres:**
+
 Set the following environment variables:
 
 `OPENAI_API_KEY`  Your OpenAI's API key to configure ChatGPT-3.5-turbo model
@@ -58,6 +60,7 @@ Set the following environment variables:
 `POSTGRES_USER`  default (Database User)
   
 `POSTGRES_PASSWORD`  LJ4pdkjm3KBz (Database Password)
+
 
 Ensure you have PostGreSQL installed. If not, download and install from [PostGreSQL Official Website](https://www.postgresql.org/download/) 
 
@@ -76,10 +79,12 @@ and then exit psql
   \q
 ```
 
+
 Navigate to your cloned repository directory and run the following command in terminal
 ```bash
   psql -U postgres -d your_database_name -f schema.txt
 ```
+
 
 Start the Web Application by running in the cloned repository directory:
 ```bash
