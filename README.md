@@ -82,7 +82,7 @@ and then exit psql
 
 Navigate to your cloned repository directory and run the following command in terminal
 ```bash
-  psql -U postgres -d your_database_name -f schema.txt
+  psql -U postgres -d verceldb -f schema.txt
 ```
 
 
